@@ -1,0 +1,354 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+public partial class AdminLogin : System.Web.UI.Page
+{
+protected void Page_Load(object sender, EventArgs e)
+{
+}
+protected void Login1_Authenticate(object sender, AuthenticateEventArgs e)
+{
+if (Login1.UserName.Equals("Admin") && Login1.Password.Equals("Admin"))
+{
+Session.Add("UserId", "Admin");
+e.Authenticated = true;
+}
+else
+{
+e.Authenticated = false;
+}
+}
+}
+
+
+
+Home Page:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+public partial class HomePage : System.Web.UI.Page
+{
+protected void Page_Load(object sender, EventArgs e)
+{
+}
+}
+
+Login Form:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Configuration;
+public partial class LoginForm : System.Web.UI.Page
+{
+SqlConnection con;
+SqlCommand cmd;
+SqlDataReader rs;
+protected void Page_Load(object sender, EventArgs e)
+{
+con = new SqlConnection(ConfigurationManager.AppSettings["conn"]);
+con.Open();
+}
+
+protected void Button1_Click(object sender, EventArgs e)
+{
+cmd = new SqlCommand("select * from Registration where userid=@uid and password=@pwd and usertype=@usertype", con);
+cmd.Parameters.AddWithValue("uid", TextBox1.Text);
+cmd.Parameters.AddWithValue("pwd", TextBox2.Text);
+cmd.Parameters.AddWithValue("usertype", DropDownList1.SelectedItem.Text);
+rs = cmd.ExecuteReader();
+if (rs.Read())
+{
+Session.Add("UserId", TextBox1.Text);
+Session.Add("UserType", DropDownList1.SelectedItem.Text);
+rs.Close();
+cmd.Dispose();
+Response.Redirect("SecretKeyVerification.aspx");
+}
+else
+{
+Label1.Text = "You're not authorized user!!";
+rs.Close();
+cmd.Dispose();
+}
+}
+}
+
+
+
+
+
+
+
+
+Registration Form:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+public partial class RegistrationForm : System.Web.UI.Page
+{
+SqlConnection con;
+SqlCommand cmd;
+protected void Page_Load(object sender, EventArgs e)
+{
+con = new SqlConnection(ConfigurationManager.AppSettings["conn"]);
+con.Open();  
+}
+protected void Button1_Click(object sender, EventArgs e)
+{
+cmd = new SqlCommand("insert into Registration values(@name,@gender,@dob,@age,@address,@mailid,@mobileno,@job,@usertype,@uid,@pwd,@regdate,@status,@secretkey)", con);
+cmd.Parameters.AddWithValue("name", TextBox1.Text);
+cmd.Parameters.AddWithValue("gender", RadioButtonList1.SelectedItem.Text);
+cmd.Parameters.AddWithValue("dob", TextBox2.Text);
+cmd.Parameters.AddWithValue("age", TextBox3.Text);
+cmd.Parameters.AddWithValue("address", TextBox4.Text);
+cmd.Parameters.AddWithValue("mailid", TextBox5.Text);
+cmd.Parameters.AddWithValue("mobileno", TextBox6.Text);
+cmd.Parameters.AddWithValue("job", DropDownList1.SelectedItem.Text);
+cmd.Parameters.AddWithValue("usertype", DropDownList2.SelectedItem.Text);
+cmd.Parameters.AddWithValue("uid", TextBox7.Text);
+cmd.Parameters.AddWithValue("pwd", TextBox8.Text);
+cmd.Parameters.AddWithValue("regdate", TextBox9.Text);
+cmd.Parameters.AddWithValue("status", "Pending");
+cmd.Parameters.AddWithValue("secretkey", "");
+cmd.ExecuteNonQuery();
+cmd.Dispose();
+Label1.Text = "Given Info Registered.";
+}
+protected void Button2_Click(object sender, EventArgs e)
+{
+TextBox1.Text = "";
+TextBox2.Text = "";
+TextBox3.Text = "";
+TextBox4.Text = "";
+TextBox5.Text = "";
+TextBox6.Text = "";
+TextBox7.Text = "";
+TextBox8.Text = "";
+TextBox9.Text = "";
+RadioButtonList1.SelectedIndex = -1;
+DropDownList1.SelectedIndex = 0;
+DropDownList2.SelectedIndex = 0;
+Label1.Text = "";
+}
+}
+
+
+
+
+
+
+TA Login:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+public partial class TALogin : System.Web.UI.Page
+{
+protected void Page_Load(object sender, EventArgs e)
+{
+}
+protected void Login1_Authenticate(object sender, AuthenticateEventArgs e)
+{
+if (Login1.UserName.Equals("tpa") && Login1.Password.Equals("tpa"))
+{
+Session.Add("UserId", "tpa");
+e.Authenticated = true;
+}
+else
+{
+e.Authenticated = false;
+}
+}
+}
+
+
+
+
+
+
+
+Secret Key Verification:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Configuration;
+public partial class SecretKeyVerification : System.Web.UI.Page
+{
+SqlConnection con;
+SqlCommand cmd;
+SqlDataReader rs;
+protected void Page_Load(object sender, EventArgs e)
+{
+con = new SqlConnection(ConfigurationManager.AppSettings["conn"]);
+con.Open();
+TextBox1.Text = Session["UserId"].ToString();
+}
+protected void Button1_Click(object sender, EventArgs e)
+{
+cmd = new SqlCommand("select * from Registration where userid=@uid and secretkey=@secretkey", con);
+cmd.Parameters.AddWithValue("uid", TextBox1.Text);        cmd.Parameters.AddWithValue("secretkey", TextBox2.Text);
+rs = cmd.ExecuteReader();
+if (rs.Read())
+{
+if (Session["UserType"].Equals("Data Owner"))
+Response.Redirect("OwnerHome.aspx");
+else if (Session["UserType"].Equals("Data Co-Owner"))
+Response.Redirect("Co_OwnerHome.aspx");
+else if (Session["UserType"].Equals("Data User"))
+Response.Redirect("UserHome.aspx");
+}
+else
+{
+Label1.Text = "Invalid Secret Key!!";
+}
+}
+}
+
+Update Client Status:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Collections;
+using System.Net.Mail;
+public partial class UpdateClientStatus : System.Web.UI.Page
+{
+SqlConnection con;
+SqlCommand cmd;
+SqlDataReader rs;
+string userid;
+protected void Page_Load(object sender, EventArgs e)
+{
+userid = Request.QueryString["userid"];
+con = new SqlConnection(ConfigurationManager.AppSettings["conn"]);
+con.Open();
+cmd = new SqlCommand("select * from Registration where userid=@uid", con);
+cmd.Parameters.AddWithValue("uid", userid);
+rs = cmd.ExecuteReader();
+if (rs.Read())
+{
+TextBox1.Text = rs[0].ToString();
+TextBox2.Text = rs[1].ToString();
+TextBox3.Text = rs[3].ToString();
+TextBox4.Text = rs[4].ToString();
+TextBox5.Text = rs[5].ToString();
+TextBox6.Text = rs[6].ToString();
+TextBox7.Text = rs[9].ToString();
+}
+rs.Close();
+cmd.Dispose();
+}
+protected void Button1_Click(object sender, EventArgs e)
+{
+string key = GenerateRandomCode();
+string mailid = TextBox5.Text;
+cmd = new SqlCommand("update Registration set status=@status where userid=@uid", con);
+cmd.Parameters.AddWithValue("status", RadioButtonList1.SelectedItem.Value);
+cmd.Parameters.AddWithValue("uid", userid);
+cmd.ExecuteNonQuery();
+cmd.Dispose();
+if (RadioButtonList1.SelectedItem.Text.Equals("Accept"))
+{
+
+cmd = new SqlCommand("update Registration set secretkey=@key where userid=@uid", con);
+cmd.Parameters.AddWithValue("key", key);
+cmd.Parameters.AddWithValue("uid", userid);
+cmd.ExecuteNonQuery();
+cmd.Dispose();
+/*
+//Sending Mail in online 
+MailMessage mail = new MailMessage();
+mail.To.Add(mailid);//receiver
+mail.From = new MailAddress("customerproject404@gmail.com");//sender
+mail.Subject = "Secure Key:";
+string Body = "<b>From:<b>" + mail.From + "<br/>" + "Your Secure Key <br/>" + key;
+mail.Body = Body;
+mail.IsBodyHtml = true;
+SmtpClient smtp = new SmtpClient();
+smtp.Host = "smtp.gmail.com"; //Or Your SMTP Server Address//refer server
+smtp.Credentials = new System.Net.NetworkCredential("customerproject404@gmail.com", "ssiaptech");//Or your Smtp Email ID and Password//security
+smtp.EnableSsl = true;
+smtp.Send(mail);
+*/
+}
+Label1.Text = "User Status Updated & Key Sent to Approved User!!";
+}
+private string GenerateRandomCode()
+{
+Random r = new Random();
+string s = "", s1 = "";
+s = ((char)r.Next(65, 90)).ToString();
+ArrayList aa = new ArrayList();
+s = s + ((char)r.Next(65, 90)).ToString();
+s = s + ((char)r.Next(65, 90)).ToString();
+s = s + ((char)r.Next(65, 90)).ToString();
+s1 = r.Next(1000, 9999).ToString();
+s = s + s1;
+s1 = "";
+char[] c = s.ToCharArray();
+while (s1.Length != c.Length)
+{
+int n = r.Next(0, c.Length);
+if (!aa.Contains(n))
+{
+s1 = s1 + c[n].ToString();
+aa.Add(n);
+}
+}
+return s1;
+}
+}
+
+View Approved Clients:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+public partial class ViewApprovedClients : System.Web.UI.Page
+{
+SqlDataAdapter adp;
+DataSet ds;
+protected void Page_Load(object sender, EventArgs e)
+{
+if (!IsPostBack)
+MyData();
+}
+private void MyData()
+{
+adp = new SqlDataAdapter("select * from Registration where status='Accepted'", ConfigurationManager.AppSettings["conn"]);
+ds = new DataSet();
+adp.Fill(ds);
+GridView1.DataSource = ds;
+GridView1.DataBind();
+}
